@@ -19,6 +19,10 @@ run = [
   "uv run pytest -m 'not slow'",
 ]
 
+[tasks.fetch]
+description = "元データ（data/sources.toml）を落として sha256 を確かめる"
+run = "uv run python -m llm_pdf_table_extractor.sources"
+
 [tasks.fix]
 description = "lint の自動修正と format"
 run = [
