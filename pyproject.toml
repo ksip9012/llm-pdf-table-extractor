@@ -6,12 +6,12 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "openpyxl>=3.1.5",
+    "pypdf>=6.21.4",
 ]
 
 [dependency-groups]
 dev = [
   "pre-commit",
-  "pypdf>=6.21.4",
   "pyright",
   "pytest",
   "ruff",
