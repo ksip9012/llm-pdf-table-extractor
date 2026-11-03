@@ -114,14 +114,17 @@ def test_prompt_names_table_but_not_truth_labels() -> None:
     assert "千分比" not in prompt
     assert "島の数" not in prompt
     assert "本州" not in prompt
+    assert "札幌" not in prompt
+    assert "準正常値" not in prompt
 
 
-def test_prompt_tells_how_to_write_row_and_column_notes() -> None:
+def test_prompt_tells_how_to_write_row_column_and_cell_notes() -> None:
     prompt = build_prompt("1-2", "都道府県別島の数")
 
     assert "行の見出しに付いた注記は、その行のセルすべての notes" in prompt
     # 列の見出しの注記は、その列のセルすべてに付ける（decisions/0005）
     assert "列の見出しに付いた注記は、その列のセルすべての notes" in prompt
+    assert "値に付いた注記の印" in prompt
 
 
 @pytest.mark.integration
