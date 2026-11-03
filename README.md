@@ -47,3 +47,4 @@ PDF の表から取り出したデータの精度を測るための正解。ど�
 
 - [0001](./decisions/0001-source-data-placement.md): 表ごとの xlsx はリポジトリに入れ、本全体の PDF は落として使う
 - [0002](./decisions/0002-truth-as-long-cells.md): 正解は、どの表でも同じ縦長の形（1行 = 1セル）で持つ
+- [0003](./decisions/0003-gemini-with-single-page-pdf.md): LLM は Vertex AI の gemini-3.8-flash にし、表のページだけを 1ページの PDF で渡す
