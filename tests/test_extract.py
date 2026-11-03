@@ -16,6 +16,7 @@ from llm_pdf_table_extractor.extract import (
     CELLS_SCHEMA,
     build_prompt,
     extract_cells,
+    output_path,
 )
 from llm_pdf_table_extractor.pages import extract_page
 from llm_pdf_table_extractor.truth import Cell
@@ -154,3 +155,25 @@ def test_extract_cells_of_table_1_1_with_real_api() -> None:
 
     assert cells
     assert {c.table_id for c in cells} == {"1-1"}
+
+
+def test_prompt_without_label_rules_drops_only_those_rules() -> None:
+    default = build_prompt("2-2", "都道府県別人口と人口増減率")
+    without = build_prompt(
+        "2-2", "都道府県別人口と人口増減率", "without-label-rules"
+    )
+
+    # 実験用（#26）: 列の見出しのつなぎ方と、かっこ書きの扱いを外す
+    assert "「/」でつないで" not in without
+    assert "単位に見えても" not in without
+    # ほかの書き方（注記・値の桁）は残る
+    assert "値に付いた注記の印" in without
+    assert "小数の桁は表に書かれたまま" in without
+    assert default != without
+
+
+def test_output_path_separates_variants() -> None:
+    assert output_path("2-2") == Path("data/output/2-2.csv")
+    assert output_path("2-2", "without-label-rules") == Path(
+        "data/output/variants/without-label-rules/2-2.csv"
+    )

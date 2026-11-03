@@ -61,9 +61,13 @@ gcloud auth application-default login
 #   GOOGLE_CLOUD_PROJECT = "<プロジェクト ID>"
 mise run extract 1-2   # data/output/1-2.csv に書く（実 API・有料。表の番号を省くと 1-1）
 mise run evaluate 1-2  # 正解と比べ、値の一致率と食い違いの一覧を出す
+
+# 実験用: 列の見出しと単位の書き方の決まり（decisions/0006）を外したプロンプト
+mise run extract -- 2-2 --variant without-label-rules
+mise run evaluate -- 2-2 --variant without-label-rules
 ```
 
-LLM の出力（`data/output/`）もリポジトリに入れる。notes の数字の裏付けにし、取り出し直したときは `git diff` で前回と変わったセルを見る。上書きしたら、notes も書き足す。同じ表を何回か取り出して揺れを見たときは、回ごとの出力を `data/output/runs/<表の番号>/` に残す。
+LLM の出力（`data/output/`）もリポジトリに入れる。notes の数字の裏付けにし、取り出し直したときは `git diff` で前回と変わったセルを見る。上書きしたら、notes も書き足す。同じ表を何回か取り出して揺れを見たときは、回ごとの出力を `data/output/runs/<表の番号>/` に残す。実験用のプロンプトの出力は `data/output/variants/<名前>/` に分ける。
 
 結果:
 
@@ -72,6 +76,7 @@ LLM の出力（`data/output/`）もリポジトリに入れる。notes の数�
 - [表 1-1 を同じプロンプトで 3回取り出したときの揺れ](./notes/table-1-1-variance.md)（3回とも 100%。単位の「km2」「km²」は回ごとに揺れる。料金は 1回 $0.020〜0.029）
 - [表 1-8 の最初の結果](./notes/table-1-8-first-run.md)（値の一致率 100%、611 セル。141 秒、約 $0.091。時間と料金はほぼセルの数に比例。プロンプトを変えたあとの表 1-1・1-2 も 100%）
 - [表 2-2 の最初の結果](./notes/table-2-2-first-run.md)（列の見出しが 3段の表でも値の一致率 100%、384 セル。98 秒、約 $0.067。書き方の決まりはプロンプトで伝えている。プロンプトを変えたあとの第1章の 3表も 100%）
+- [列の見出しの書き方の決まりを外したときの表 2-2](./notes/table-2-2-without-label-rules.md)（値の一致率 0%。ただし値の読み違いは 0 で、ずれは見出しの書き方だけ。精度の差は「値を読めるか」より「正解と同じ形で見出しを書けるか」で出る）
 
 ## 技術選定理由
 

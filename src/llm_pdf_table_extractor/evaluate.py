@@ -9,7 +9,7 @@ import unicodedata
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
-from llm_pdf_table_extractor.extract import OUTPUT_DIR
+from llm_pdf_table_extractor.extract import output_path, parse_args
 from llm_pdf_table_extractor.truth import TRUTH_DIR, Cell, read_cells
 
 logger = logging.getLogger(__name__)
@@ -199,10 +199,11 @@ def format_report(table_id: str, report: Report) -> str:
 def main(argv: list[str]) -> int:
     """data/output/ の出力を正解と比べる（`mise run evaluate`）。"""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    table_id = argv[0] if argv else "1-1"
+    args = parse_args(argv)
+    table_id: str = args.table_id
     report = compare(
         read_cells(TRUTH_DIR / f"{table_id}.csv"),
-        read_cells(OUTPUT_DIR / f"{table_id}.csv"),
+        read_cells(output_path(table_id, args.variant)),
     )
     logger.info("%s", format_report(table_id, report))
     return 0

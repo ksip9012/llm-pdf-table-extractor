@@ -3,6 +3,7 @@
 LLM と PDF の渡し方は decisions/0003、出す形は decisions/0002。
 """
 
+import argparse
 import json
 import logging
 import os
@@ -106,15 +107,7 @@ _PROMPT_TEMPLATE = """\
 値（value）・単位（unit）・注記（notes）で書く
 - 行の見出しと列の見出しは、表に書かれたまま写す。\
 見出しの中の改行と空白は外す
-- 列の見出しが上下の段にわかれているときは、上の段から順に「/」でつないで\
-1つの column_label にする（例: 「上の段/下の段」）。名前の書かれていない枠は\
-飛ばす。表の値の列すべてをまとめる見出しはつながない
-- 単位は、列の見出しの下に単位だけを書いた「(…)」と、表の値の列すべてを\
-まとめる見出しのかっこの中にあるものだけを unit に書き、\
-column_label からは外す。\
-表の値の列すべてをまとめる見出しの単位は、すべての列の unit に書く。\
-列の見出しと同じ枠の中にあるかっこ書きは、単位に見えても column_label に\
-そのまま残す。単位が書かれていなければ unit は空にする
+{label_rules}
 - 同じ見出しの組が横に並んでいる表は、組ごとに分けず、1つの表として書く
 - 値は、数値なら桁区切りのカンマを外し、小数の桁は表に書かれたまま残す。\
 「-」などの記号はそのまま写す
@@ -127,10 +120,52 @@ column_label からは外す。\
 - 表の上から下、左の組から右の組の順に書く
 """
 
+# 列の見出しと単位の書き方（decisions/0006）
+_LABEL_RULES = """\
+- 列の見出しが上下の段にわかれているときは、上の段から順に「/」でつないで\
+1つの column_label にする（例: 「上の段/下の段」）。名前の書かれていない枠は\
+飛ばす。表の値の列すべてをまとめる見出しはつながない
+- 単位は、列の見出しの下に単位だけを書いた「(…)」と、表の値の列すべてを\
+まとめる見出しのかっこの中にあるものだけを unit に書き、\
+column_label からは外す。\
+表の値の列すべてをまとめる見出しの単位は、すべての列の unit に書く。\
+列の見出しと同じ枠の中にあるかっこ書きは、単位に見えても column_label に\
+そのまま残す。単位が書かれていなければ unit は空にする"""
 
-def build_prompt(table_id: str, title: str) -> str:
-    """表の番号と表題から、LLM に渡す指示を作る。"""
-    return _PROMPT_TEMPLATE.format(table_id=table_id, title=title)
+# 実験用（#26）: 上の決まりを書く前（PR #27 より前）の書き方
+_LABEL_RULES_BEFORE_0006 = """\
+- 列の見出しに単位が書かれていれば、単位は unit に書き、\
+column_label からは外す。複数の列をまとめる見出しに単位が書かれていれば、\
+その下の列すべての unit に書く。単位が書かれていなければ unit は空にする"""
+
+PROMPT_VARIANTS = {
+    "default": _LABEL_RULES,
+    "without-label-rules": _LABEL_RULES_BEFORE_0006,
+}
+
+
+def build_prompt(table_id: str, title: str, variant: str = "default") -> str:
+    """表の番号と表題から、LLM に渡す指示を作る。
+
+    Args:
+        table_id: 表の番号。
+        title: 表題。
+        variant: プロンプトの種類（`PROMPT_VARIANTS` のキー）。
+            "without-label-rules" は、列の見出しと単位の書き方の決まり
+            （decisions/0006）を外した実験用。
+    """
+    return _PROMPT_TEMPLATE.format(
+        table_id=table_id,
+        title=title,
+        label_rules=PROMPT_VARIANTS[variant],
+    )
+
+
+def output_path(table_id: str, variant: str = "default") -> Path:
+    """出力の置き場所。実験用のプロンプトの出力は variants/ の下に分ける。"""
+    if variant == "default":
+        return OUTPUT_DIR / f"{table_id}.csv"
+    return OUTPUT_DIR / "variants" / variant / f"{table_id}.csv"
 
 
 def parse_cells(response: LLMResponse, table_id: str) -> list[Cell]:
@@ -162,6 +197,7 @@ def extract_cells(
     *,
     client: LLMClient,
     model: str = DEFAULT_MODEL,
+    variant: str = "default",
 ) -> tuple[list[Cell], LLMResponse]:
     """1ページの PDF を Gemini に渡し、表のセルを出させる。
 
@@ -171,6 +207,7 @@ def extract_cells(
         title: 表題（`meta.json` の `title`）。
         client: `google.genai.Client`。テストでは偽のクライアントを渡す。
         model: 使うモデル。
+        variant: プロンプトの種類（`build_prompt` を参照）。
 
     Returns:
         セルの一覧と、トークン数を見るための応答。
@@ -179,7 +216,7 @@ def extract_cells(
         model=model,
         contents=[
             types.Part.from_bytes(data=page_pdf, mime_type="application/pdf"),
-            build_prompt(table_id, title),
+            build_prompt(table_id, title, variant),
         ],
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -189,10 +226,22 @@ def extract_cells(
     return parse_cells(response, table_id), response
 
 
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    """`mise run extract` と `mise run evaluate` の引数を読む。"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("table_id", nargs="?", default="1-1")
+    parser.add_argument(
+        "--variant", choices=sorted(PROMPT_VARIANTS), default="default"
+    )
+    return parser.parse_args(argv)
+
+
 def main(argv: list[str]) -> int:
     """表のセルを取り出して data/output/ に書く（`mise run extract`）。"""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    table_id = argv[0] if argv else "1-1"
+    args = parse_args(argv)
+    table_id: str = args.table_id
+    variant: str = args.variant
     meta = json.loads(
         (TRUTH_DIR / f"{table_id}.meta.json").read_text(encoding="utf-8")
     )
@@ -200,11 +249,15 @@ def main(argv: list[str]) -> int:
 
     started = time.perf_counter()
     cells, response = extract_cells(
-        page_pdf, table_id, meta["title"], client=genai.Client()
+        page_pdf,
+        table_id,
+        meta["title"],
+        client=genai.Client(),
+        variant=variant,
     )
     elapsed = time.perf_counter() - started
 
-    out = OUTPUT_DIR / f"{table_id}.csv"
+    out = output_path(table_id, variant)
     write_cells(cells, out)
     logger.info("%s に %d セルを書いた（%.1f 秒）", out, len(cells), elapsed)
     usage = response.usage_metadata
