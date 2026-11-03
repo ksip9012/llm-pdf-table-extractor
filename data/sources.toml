@@ -1,5 +1,5 @@
 # 元データの一覧（decisions/0001）。
-# 出典: 総務省統計局「日本の統計 2026」（https://www.stat.go.jp/data/nihon/）
+# 出典: 総務省統計局「日本の統計 2026」（https://www.stat.go.jp/data/nihon/index1.html）
 # 公共データ利用規約 第1.0版（PDL1.0）に従って利用する。
 #
 # committed = true のファイルはリポジトリに入れる（表ごとの xlsx。新しい版が出ると
