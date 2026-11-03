@@ -20,3 +20,66 @@ url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100100.xlsx"
 path = "data/xlsx/2026/n260100100.xlsx"
 sha256 = "5a7f0bd0747586b8a5b09839932ea4fce2a023fa7933ef8ae8ffae78f798ffb8"
 committed = true
+
+[[sources]]
+name = "表 1-2 都道府県別島の数（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100200.xlsx"
+path = "data/xlsx/2026/n260100200.xlsx"
+sha256 = "3fa63db2e2b80df88c5ee2eef78f438a13a93fed6a982ec6fa3fbd9345fd459c"
+committed = true
+
+[[sources]]
+name = "表 1-3 主な島（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100300.xlsx"
+path = "data/xlsx/2026/n260100300.xlsx"
+sha256 = "9369999b27dae7079af78c28a8c0ac22204d59df6c41c23c6e46e7cc28c9de29"
+committed = true
+
+[[sources]]
+name = "表 1-4 地目別面積（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100400.xlsx"
+path = "data/xlsx/2026/n260100400.xlsx"
+sha256 = "843c915f862bb205aded725444fc2769a4493b267ed476cb569db3841da17e50"
+committed = true
+
+[[sources]]
+name = "表 1-5 主な湖（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100500.xlsx"
+path = "data/xlsx/2026/n260100500.xlsx"
+sha256 = "9c407fec19b55f1607960f5e0d23e4f94d9abac3c39c62088a07dd9ebbc87a24"
+committed = true
+
+[[sources]]
+name = "表 1-6 主な山（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100600.xlsx"
+path = "data/xlsx/2026/n260100600.xlsx"
+sha256 = "3bda366b19fd6c217bea174ceb31b62a41e4dc2f6caea816f5b719cb640039bd"
+committed = true
+
+[[sources]]
+name = "表 1-7 主な水系（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100700.xlsx"
+path = "data/xlsx/2026/n260100700.xlsx"
+sha256 = "cefbc5f0b0236b620593e646bfc83d3898c54b9e3cc4522a40b473cc76ae7d6a"
+committed = true
+
+[[sources]]
+name = "表 1-8 気象官署別気温（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100800.xlsx"
+path = "data/xlsx/2026/n260100800.xlsx"
+sha256 = "2c364c6c3eeec97ea1b1754dccdbffb30ce21b737580a33522bac31a418276bc"
+committed = true
+
+[[sources]]
+name = "表 1-9 気象官署別気温（平年値）（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100900.xlsx"
+path = "data/xlsx/2026/n260100900.xlsx"
+sha256 = "94a6a9b1db00a44b2f29cd4262e41a672712d70b6e5c467ac4e4c92cb3df95d7"
+committed = true
+
+[[sources]]
+name = "表 1-10 気象官署別降水量（平年値）（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260101000.xlsx"
+path = "data/xlsx/2026/n260101000.xlsx"
+sha256 = "576dcdcfb44f373692096894d44c8988ca965557b6319de522dd0713b3f513b5"
+committed = true
