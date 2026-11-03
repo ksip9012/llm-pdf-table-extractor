@@ -1,0 +1,20 @@
+# チェックの中身は mise.toml の [tasks.check] に書く（手元・pre-commit と同じコマンド）。
+# この YAML は「チェックアウト → mise で版をそろえる → mise run check」だけにする（decisions/0003）
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # mise は信頼していない設定ファイルを読まないので、このリポジトリの mise.toml を信頼させる
+      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v5
+      - run: mise run check
