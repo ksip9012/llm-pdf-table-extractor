@@ -35,6 +35,10 @@ run = "uv run python -m llm_pdf_table_extractor.truth"
 description = "表のページを Gemini に読ませ、セルを data/output/ に書く（実 API・有料）"
 run = "uv run python -m llm_pdf_table_extractor.extract"
 
+[tasks.evaluate]
+description = "data/output/ の出力を正解と比べ、一致率と食い違いを出す"
+run = "uv run python -m llm_pdf_table_extractor.evaluate"
+
 [tasks.fix]
 description = "lint の自動修正と format"
 run = [
