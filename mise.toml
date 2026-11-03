@@ -1,5 +1,5 @@
 [tools]
-# 版の選び方: Python は最新の 1つ前のマイナー版。毎年 11月に見直す（decisions/0007）
+# 版の選び方: Python は最新の 1つ前のマイナー版。毎年 11月に見直す（dotfiles の decisions/0007-language-versions）
 python = "3.14"
 uv = "0.13.6"
 
@@ -12,7 +12,7 @@ UV_PYTHON_PREFERENCE = "only-system"
 GOOGLE_GENAI_USE_VERTEXAI = "true"
 GOOGLE_CLOUD_LOCATION = "global"
 
-# 手元・pre-commit・CI で同じチェックを動かす（decisions/0003）
+# 手元・pre-commit・CI で同じチェックを動かす（dotfiles の decisions/0003-checks-in-mise-tasks）
 # ruff・pyright・pytest の版は uv.lock で固定する
 [tasks.check]
 description = "lint・format・型チェック・速いテスト"
@@ -47,7 +47,7 @@ run = [
 ]
 
 # ライブラリと開発の道具を上げる。作業を始めるときに、本来の作業とは別のコミットで回す
-# （よく触るリポジトリは月 1回まで。decisions/0008）
+# （よく触るリポジトリは月 1回まで。dotfiles の decisions/0008-tool-and-library-upgrades）
 [tasks.upgrade]
 description = "uv.lock のライブラリを、pyproject.toml の条件の中で最新にしてチェックする"
 run = [
