@@ -88,3 +88,15 @@ def test_truth_1_1_values_appear_on_pdf_page() -> None:
         if f"{float(c.value):,.2f}" not in text or c.row_label not in text
     ]
     assert missing == []
+
+
+@pytest.mark.skipif(not PDF.exists(), reason=NO_PDF)
+def test_truth_1_1_units_appear_on_pdf_page() -> None:
+    meta = json.loads(META_1_1.read_text(encoding="utf-8"))
+    page_number: int = meta["pdf_page"]
+    text = PdfReader(PDF).pages[page_number - 1].extract_text()
+
+    units = {c.unit for c in read_cells(TRUTH_1_1)}
+
+    assert units == {"km2", "0/00"}
+    assert all(f"({u})" in text for u in units)

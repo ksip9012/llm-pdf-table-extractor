@@ -135,9 +135,10 @@ def build_table_1_1(xlsx_path: Path) -> list[Cell]:
                 continue
             row_label = str(name).strip()
             notes = _note_numbers(sheet[f"{note_col}{row}"].value)
+            # 単位は PDF と xlsx の見出し（「(km2)」「(0/00)」）のまま
             for column_label, unit, col in (
                 ("面積", "km2", area_col),
-                ("千分比", "‰", ratio_col),
+                ("千分比", "0/00", ratio_col),
             ):
                 source = sheet[f"{col}{row}"]
                 number = source.value
