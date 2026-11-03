@@ -22,6 +22,8 @@ TRUTH_1_2 = Path("data/truth/1-2.csv")
 META_1_2 = Path("data/truth/1-2.meta.json")
 TRUTH_1_8 = Path("data/truth/1-8.csv")
 META_1_8 = Path("data/truth/1-8.meta.json")
+TRUTH_2_2 = Path("data/truth/2-2.csv")
+META_2_2 = Path("data/truth/2-2.meta.json")
 PDF = Path("data/raw/26nihon.pdf")
 NO_PDF = "PDF は mise run fetch で落とす（git の対象外）"
 
@@ -207,3 +209,66 @@ def test_truth_1_8_rows_appear_on_pdf_page() -> None:
         f"{label} {' '.join(values)}" for label, values in rows.items()
     ]
     assert [line for line in expected if line not in lines] == []
+
+
+def test_truth_2_2_joins_multi_level_column_labels() -> None:
+    cells = read_cells(TRUTH_2_2)
+    labels = list(dict.fromkeys(c.row_label for c in cells))
+    columns = {c.column_label: (c.unit, c.notes) for c in cells}
+
+    assert len(cells) == 384
+    assert len(labels) == 48
+    assert labels[0] == "全国"
+    assert labels[-1] == "沖縄県"
+    # 段をまたいだ見出しは上の段から「/」でつなぐ（decisions/0006）。
+    # 名前のない枠は飛ばし、かっこ書きは見出しのまま残す
+    assert columns == {
+        "国勢調査人口/平成27年": ("1,000人", ()),
+        "国勢調査人口/令和2年": ("1,000人", ()),
+        "国勢調査人口/人口集中地区": ("1,000人", ("1",)),
+        "国勢調査人口/人口密度": ("人/km2", ("2",)),
+        "国勢調査人口/人口増減率（平成27～令和2年）": ("%", ()),
+        "令和6年推計人口/総人口": ("1,000人", ()),
+        "令和6年推計人口/人口性比（女性100に対する男性）": ("", ()),
+        "令和6年推計人口/人口増減率（対前年）（人口1,000につき）": ("", ()),
+    }
+
+
+def test_truth_2_2_keeps_text_number_as_written() -> None:
+    cells = {(c.row_label, c.column_label): c for c in read_cells(TRUTH_2_2)}
+
+    # xlsx の F36 は文字の「-0.0」。PDF も「-0.0」
+    key = ("大阪府", "国勢調査人口/人口増減率（平成27～令和2年）")
+    assert cells[key].value == "-0.0"
+    # xlsx の 126146.099 は、表示形式 #,##0 で PDF の「126,146」になる
+    assert cells[("全国", "国勢調査人口/令和2年")].value == "126146"
+
+
+def _with_commas(value: str) -> str:
+    """値を、PDF に書かれる形（整数の部分を 3桁ごとのカンマ）にする。"""
+    sign = "-" if value.startswith("-") else ""
+    whole, dot, decimals = value.lstrip("-").partition(".")
+    return f"{sign}{int(whole):,}{dot}{decimals}"
+
+
+@pytest.mark.skipif(not PDF.exists(), reason=NO_PDF)
+def test_truth_2_2_rows_appear_on_pdf_page() -> None:
+    meta = json.loads(META_2_2.read_text(encoding="utf-8"))
+    page_number: int = meta["pdf_page"]
+    lines = PdfReader(PDF).pages[page_number - 1].extract_text().splitlines()
+    rows: dict[str, list[str]] = {}
+    for c in read_cells(TRUTH_2_2):
+        rows.setdefault(c.row_label, []).append(_with_commas(c.value))
+
+    # PDF では「全国 127,095 126,146 … -4.4」のように、都道府県ごとに 1行
+    expected = [
+        f"{label} {' '.join(values)}" for label, values in rows.items()
+    ]
+    assert [line for line in expected if line not in lines] == []
+
+
+def test_truth_2_2_notes_are_defined_in_meta() -> None:
+    meta = json.loads(META_2_2.read_text(encoding="utf-8"))
+    used = {n for c in read_cells(TRUTH_2_2) for n in c.notes}
+
+    assert used == set(meta["notes"]) == {"1", "2"}

@@ -83,3 +83,10 @@ url = "https://www.stat.go.jp/data/nihon/zuhyou/n260101000.xlsx"
 path = "data/xlsx/2026/n260101000.xlsx"
 sha256 = "576dcdcfb44f373692096894d44c8988ca965557b6319de522dd0713b3f513b5"
 committed = true
+
+[[sources]]
+name = "表 2-2 都道府県別人口と人口増減率（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260200200.xlsx"
+path = "data/xlsx/2026/n260200200.xlsx"
+sha256 = "6c38ee30b2bd1fd477217aa98351daaf1ed69f373c574ac768496addd0757578"
+committed = true

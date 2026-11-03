@@ -65,5 +65,5 @@ def test_load_sources_reads_repository_list() -> None:
         Path("data/raw/26nihon.pdf")
     ]
     assert all(s.path.suffix == ".xlsx" for s in sources if s.committed)
-    assert len(sources) == 11
+    assert len(sources) == 12
     assert all(len(s.sha256) == 64 for s in sources)
