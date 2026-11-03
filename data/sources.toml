@@ -1,0 +1,22 @@
+# 元データの一覧（decisions/0001）。
+# 出典: 総務省統計局「日本の統計 2026」（https://www.stat.go.jp/data/nihon/）
+# 公共データ利用規約 第1.0版（PDL1.0）に従って利用する。
+#
+# committed = true のファイルはリポジトリに入れる（表ごとの xlsx。新しい版が出ると
+# サイトから消えるため）。false のファイルは `mise run fetch` で落とし、git の対象外に
+# 置く（本全体の PDF。過去の版もサイトに残っているため）。どちらも sha256 で、
+# 一覧と同じファイルかを確かめる。
+
+[[sources]]
+name = "日本の統計 2026（本全体の PDF）"
+url = "https://www.stat.go.jp/data/nihon/pdf/26nihon.pdf"
+path = "data/raw/26nihon.pdf"
+sha256 = "262f41649358092231d3fba9062a5e738e5abea6ec8ebdeac3b7f7072103844b"
+committed = false
+
+[[sources]]
+name = "表 1-1 国土面積（xlsx）"
+url = "https://www.stat.go.jp/data/nihon/zuhyou/n260100100.xlsx"
+path = "data/xlsx/2026/n260100100.xlsx"
+sha256 = "5a7f0bd0747586b8a5b09839932ea4fce2a023fa7933ef8ae8ffae78f798ffb8"
+committed = true
