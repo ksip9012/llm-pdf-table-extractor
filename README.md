@@ -55,13 +55,16 @@ gcloud auth application-default login
 # GCP のプロジェクトを手元の mise.local.toml に書く（git の対象外）
 #   [env]
 #   GOOGLE_CLOUD_PROJECT = "<プロジェクト ID>"
-mise run extract   # data/output/<表の番号>.csv に書く（実 API・有料）
-mise run evaluate  # 正解と比べ、値の一致率と食い違いの一覧を出す
+mise run extract 1-2   # data/output/1-2.csv に書く（実 API・有料。表の番号を省くと 1-1）
+mise run evaluate 1-2  # 正解と比べ、値の一致率と食い違いの一覧を出す
 ```
 
 LLM の出力（`data/output/`）もリポジトリに入れる。notes の数字の裏付けにし、取り出し直したときは `git diff` で前回と変わったセルを見る。上書きしたら、notes も書き足す。
 
-結果: [表 1-1 の最初の結果](./notes/table-1-1-first-run.md)（値の一致率 100%、96 セル）
+結果:
+
+- [表 1-1 の最初の結果](./notes/table-1-1-first-run.md)（値の一致率 100%、96 セル）
+- [表 1-2 の最初の結果と、表 1-1 の取り出し直し](./notes/table-1-2-first-run.md)（どちらも値の一致率 100%。書き方の違い（「 - 」「km²」）は比べる仕組みで揃えている）
 
 ## 技術選定理由
 
