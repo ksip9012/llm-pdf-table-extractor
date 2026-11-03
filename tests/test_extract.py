@@ -116,6 +116,17 @@ def test_prompt_names_table_but_not_truth_labels() -> None:
     assert "本州" not in prompt
     assert "札幌" not in prompt
     assert "準正常値" not in prompt
+    assert "国勢調査" not in prompt
+    assert "1,000につき" not in prompt
+
+
+def test_prompt_tells_how_to_join_multi_level_column_labels() -> None:
+    prompt = build_prompt("2-2", "都道府県別人口と人口増減率")
+
+    # 段をまたいだ列の見出しは上の段から「/」でつなぐ（decisions/0006）
+    assert "上の段から順に「/」でつないで" in prompt
+    assert "表の値の列すべてをまとめる見出しはつながない" in prompt
+    assert "かっこ書きは、単位に見えても column_label に" in prompt
 
 
 def test_prompt_tells_how_to_write_row_column_and_cell_notes() -> None:
