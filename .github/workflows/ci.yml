@@ -1,5 +1,5 @@
 # チェックの中身は mise.toml の [tasks.check] に書く（手元・pre-commit と同じコマンド）。
-# この YAML は「チェックアウト → mise で版をそろえる → mise run check」だけにする（decisions/0003）
+# この YAML は「チェックアウト → mise で版をそろえる → mise run check」だけにする（dotfiles の decisions/0003-checks-in-mise-tasks）
 name: CI
 
 on:
