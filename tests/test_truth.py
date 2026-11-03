@@ -20,6 +20,8 @@ TRUTH_1_1 = Path("data/truth/1-1.csv")
 META_1_1 = Path("data/truth/1-1.meta.json")
 TRUTH_1_2 = Path("data/truth/1-2.csv")
 META_1_2 = Path("data/truth/1-2.meta.json")
+TRUTH_1_8 = Path("data/truth/1-8.csv")
+META_1_8 = Path("data/truth/1-8.meta.json")
 PDF = Path("data/raw/26nihon.pdf")
 NO_PDF = "PDF は mise run fetch で落とす（git の対象外）"
 
@@ -30,7 +32,14 @@ NO_PDF = "PDF は mise run fetch で落とす（git の対象外）"
         (1000, "#,##0.00", "1000.00"),
         (28.1, "#,##0.00", "28.10"),
         (14125, "#,##0", "14125"),
-        (3.5, "General", "4"),
+        (-1.8, "#,##0.0", "-1.8"),
+        (19, "#,##0.0", "19.0"),
+        (23.9, "\\a\\)#,##0.0", "23.9"),
+        # General は Excel と同じく値をそのまま書く（表 1-8 の千葉の 7月など）
+        (28.8, "General", "28.8"),
+        (3.5, "General", "3.5"),
+        (14125, "General", "14125"),
+        (6.0, "General", "6"),
     ],
 )
 def test_format_number_uses_decimals_of_number_format(
@@ -154,3 +163,47 @@ def test_truth_1_2_rows_appear_on_pdf_page() -> None:
         if f"{label} {' '.join(values)}" not in text
     ]
     assert missing == []
+
+
+def test_truth_1_8_has_47_stations_by_13_columns() -> None:
+    cells = read_cells(TRUTH_1_8)
+    labels = list(dict.fromkeys(c.row_label for c in cells))
+    columns = list(dict.fromkeys(c.column_label for c in cells))
+
+    assert len(cells) == 611
+    assert len(labels) == 47
+    assert labels[0] == "札幌"
+    assert labels[-1] == "那覇"
+    assert columns == ["平均", *(f"{m}月" for m in range(1, 13))]
+    # 単位は列をまとめる見出し「気温（℃）」から読む
+    assert {c.unit for c in cells} == {"℃"}
+
+
+def test_truth_1_8_keeps_special_cells_as_printed() -> None:
+    meta = json.loads(META_1_8.read_text(encoding="utf-8"))
+    cells = {(c.row_label, c.column_label): c for c in read_cells(TRUTH_1_8)}
+
+    # 表示形式が General のセルも、PDF のとおりの桁
+    assert cells[("千葉", "7月")].value == "28.8"
+    assert cells[("彦根", "12月")].value == "6.6"
+    # 表示形式に入った「a)」（準正常値）は、そのセルの notes
+    assert [k for k, c in cells.items() if c.notes] == [("那覇", "11月")]
+    assert cells[("那覇", "11月")].notes == ("a",)
+    assert set(meta["notes"]) == {"a"}
+
+
+@pytest.mark.skipif(not PDF.exists(), reason=NO_PDF)
+def test_truth_1_8_rows_appear_on_pdf_page() -> None:
+    meta = json.loads(META_1_8.read_text(encoding="utf-8"))
+    page_number: int = meta["pdf_page"]
+    lines = PdfReader(PDF).pages[page_number - 1].extract_text().splitlines()
+    rows: dict[str, list[str]] = {}
+    for c in read_cells(TRUTH_1_8):
+        printed = "".join(f"{n})" for n in c.notes) + c.value
+        rows.setdefault(c.row_label, []).append(printed)
+
+    # PDF では「那覇 24.4 … a)23.9 18.6」のように、官署ごとに 1行
+    expected = [
+        f"{label} {' '.join(values)}" for label, values in rows.items()
+    ]
+    assert [line for line in expected if line not in lines] == []

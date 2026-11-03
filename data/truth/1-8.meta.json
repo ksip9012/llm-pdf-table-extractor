@@ -1,0 +1,13 @@
+{
+  "table_id": "1-8",
+  "chapter": "第1章 国土・気象",
+  "title": "気象官署別気温（令和6年）",
+  "pdf": "data/raw/26nihon.pdf",
+  "pdf_page": 33,
+  "xlsx": "data/xlsx/2026/n260100800.xlsx",
+  "as_of": "令和6年",
+  "notes": {
+    "a": "準正常値"
+  },
+  "source": "気象庁「気象観測統計（過去の気象データ）」"
+}

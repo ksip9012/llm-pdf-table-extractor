@@ -91,8 +91,14 @@ def format_number(value: float, number_format: str) -> str:
         number_format: セルの表示形式（例: "#,##0.00"）。
 
     Returns:
-        例: 1000 と "#,##0.00" なら "1000.00"。
+        例: 1000 と "#,##0.00" なら "1000.00"。表示形式が "General" なら、
+        Excel と同じく値をそのまま書く（28.8 なら "28.8"、14125 なら
+        "14125"）。
     """
+    if number_format == "General":
+        if float(value).is_integer():
+            return str(int(value))
+        return repr(float(value))
     positive_part = number_format.split(";")[0]
     match = re.search(r"\.(0+)", positive_part)
     decimals = len(match.group(1)) if match else 0
@@ -104,6 +110,19 @@ def _note_numbers(mark: object) -> tuple[str, ...]:
     if mark is None:
         return ()
     return tuple(re.findall(r"(\d+)\)", str(mark)))
+
+
+def _format_marks(number_format: str) -> tuple[str, ...]:
+    """表示形式に入った注記の印（`\\a\\)#,##0.0` の "a" など）を取り出す。
+
+    表示形式では文字を `\\` でエスケープして書くので、`\\a\\)` の形だけを読む。
+    """
+    return tuple(re.findall(r"\\([0-9a-z])\\\)", number_format))
+
+
+def _note_order(note: str) -> tuple[bool, int, str]:
+    """注記の並び順（数字は小さい順、そのあとに英字）。"""
+    return (not note.isdigit(), int(note) if note.isdigit() else 0, note)
 
 
 def _label(text: object) -> str:
@@ -120,6 +139,18 @@ def _unit(text: object) -> str:
     if text is None:
         return ""
     return re.sub(r"[\s()（）]", "", str(text))
+
+
+def _unit_in_heading(text: object) -> str:
+    """列をまとめる見出し（"気温（℃）" など）の、かっこの中の単位を取り出す。
+
+    Raises:
+        ValueError: 見出しにかっこがない。
+    """
+    match = re.search(r"[（(]([^）)]+)[）)]", str(text))
+    if match is None:
+        raise ValueError(f"見出しに単位のかっこがない: {text!r}")
+    return match.group(1).strip()
 
 
 def _value(cell: XlsxCell | MergedCell, coordinate: str) -> str:
@@ -165,7 +196,10 @@ class SideBySideTable:
         blocks: 横に並ぶ組（左から順に）。
         rows: データの行。
         header_row: 列の見出しの行。
-        unit_row: 単位の行（ない表は None。単位は空になる）。
+        unit_row: 列ごとの単位の行（ない表は None）。
+        unit_cell: すべての列に共通の単位が書かれた、列をまとめる見出しの
+            セル（例: "気温（℃）" の "C3"）。unit_row も unit_cell も
+            ない表は、単位が空になる。
     """
 
     table_id: str
@@ -174,6 +208,7 @@ class SideBySideTable:
     rows: range
     header_row: int
     unit_row: int | None = None
+    unit_cell: str | None = None
 
 
 TABLES = {
@@ -205,6 +240,17 @@ TABLES = {
         rows=range(6, 31),
         header_row=4,
     ),
+    # 47 官署 × 13列（平均・1〜12月）。組は 1つ。
+    # 単位は、列をまとめる見出し「気温（℃）」（C3〜O3 を結合したセル）だけ。
+    # 那覇の 11月の「a)」（準正常値）は値ではなく表示形式に入っている。
+    "1-8": SideBySideTable(
+        table_id="1-8",
+        xlsx=Path("data/xlsx/2026/n260100800.xlsx"),
+        blocks=(Block("A", None, tuple("CDEFGHIJKLMNO")),),
+        rows=range(6, 53),
+        header_row=4,
+        unit_cell="C3",
+    ),
 }
 
 
@@ -220,16 +266,20 @@ def build_table(table: SideBySideTable) -> list[Cell]:
         行の見出しごとに、値の列の数だけのセル。
     """
     sheet = load_workbook(table.xlsx).worksheets[0]
+
+    def unit_of(col: str) -> str:
+        if table.unit_row is not None:
+            return _unit(sheet[f"{col}{table.unit_row}"].value)
+        if table.unit_cell is not None:
+            return _unit_in_heading(sheet[table.unit_cell].value)
+        return ""
+
     cells: list[Cell] = []
     for block in table.blocks:
         columns = [
             (
                 _label(sheet[f"{col}{table.header_row}"].value),
-                _unit(
-                    sheet[f"{col}{table.unit_row}"].value
-                    if table.unit_row is not None
-                    else None
-                ),
+                unit_of(col),
                 _note_numbers(sheet[f"{col}{table.header_row}"].value),
                 col,
             )
@@ -245,13 +295,17 @@ def build_table(table: SideBySideTable) -> list[Cell]:
                 else ()
             )
             for column_label, unit, column_notes, col in columns:
-                notes = sorted({*row_notes, *column_notes}, key=int)
+                source = sheet[f"{col}{row}"]
+                cell_notes = _format_marks(source.number_format)
+                notes = sorted(
+                    {*row_notes, *column_notes, *cell_notes}, key=_note_order
+                )
                 cells.append(
                     Cell(
                         table_id=table.table_id,
                         row_label=_label(name),
                         column_label=column_label,
-                        value=_value(sheet[f"{col}{row}"], f"{col}{row}"),
+                        value=_value(source, f"{col}{row}"),
                         unit=unit,
                         notes=tuple(notes),
                     )
