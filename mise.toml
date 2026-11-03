@@ -7,6 +7,10 @@ uv = "0.13.6"
 # uv が自分で Python を探さず、上の [tools] で mise が入れた Python を使うようにする
 # （版を決める場所を mise.toml の 1か所にする）
 UV_PYTHON_PREFERENCE = "only-system"
+# Gemini は Vertex AI 経由で使う（decisions/0003-gemini-with-single-page-pdf）
+# GCP のプロジェクトは手元の mise.local.toml に GOOGLE_CLOUD_PROJECT で書く
+GOOGLE_GENAI_USE_VERTEXAI = "true"
+GOOGLE_CLOUD_LOCATION = "global"
 
 # 手元・pre-commit・CI で同じチェックを動かす（decisions/0003）
 # ruff・pyright・pytest の版は uv.lock で固定する
@@ -26,6 +30,10 @@ run = "uv run python -m llm_pdf_table_extractor.sources"
 [tasks.truth]
 description = "xlsx から正解（data/truth/）を作り直す"
 run = "uv run python -m llm_pdf_table_extractor.truth"
+
+[tasks.extract]
+description = "表のページを Gemini に読ませ、セルを data/output/ に書く（実 API・有料）"
+run = "uv run python -m llm_pdf_table_extractor.extract"
 
 [tasks.fix]
 description = "lint の自動修正と format"
