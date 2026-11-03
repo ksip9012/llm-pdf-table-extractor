@@ -37,13 +37,32 @@ PDF の表から取り出したデータの精度を測るための正解。ど�
 
 - `data/truth/<表の番号>.csv`: `table_id`・`row_label`・`column_label`・`value`・`unit`・`notes`
 - `data/truth/<表の番号>.meta.json`: 表題・PDF のページ・基準日・注記の中身・資料
-- `mise run truth` で xlsx から作り直す。正解の値が PDF のページに書かれているかは、テストで確かめる（PDF がある手元だけ）
+- `mise run truth` で xlsx から作り直す。正解の値・単位が PDF のページに書かれているかは、テストで確かめる（PDF がある手元だけ）
 
 | 表 | 内容 | PDF のページ |
 |---|---|---|
 | 1-1 | 都道府県別面積（令和7年） | 30 |
 
+## LLM で取り出して比べる
+
+表のページだけを 1ページの PDF にして Gemini（Vertex AI）に読ませ、正解と同じ形で出させて比べる（[decisions/0003](./decisions/0003-gemini-with-single-page-pdf.md)・[0004](./decisions/0004-compare-cells.md)）。
+
+```bash
+gcloud auth application-default login
+# GCP のプロジェクトを手元の mise.local.toml に書く（git の対象外）
+#   [env]
+#   GOOGLE_CLOUD_PROJECT = "<プロジェクト ID>"
+mise run extract   # data/output/<表の番号>.csv に書く（実 API・有料）
+mise run evaluate  # 正解と比べ、値の一致率と食い違いの一覧を出す
+```
+
+LLM の出力（`data/output/`）もリポジトリに入れる。notes の数字の裏付けにし、取り出し直したときは `git diff` で前回と変わったセルを見る。上書きしたら、notes も書き足す。
+
+結果: [表 1-1 の最初の結果](./notes/table-1-1-first-run.md)（値の一致率 100%、96 セル）
+
 ## 技術選定理由
 
 - [0001](./decisions/0001-source-data-placement.md): 表ごとの xlsx はリポジトリに入れ、本全体の PDF は落として使う
 - [0002](./decisions/0002-truth-as-long-cells.md): 正解は、どの表でも同じ縦長の形（1行 = 1セル）で持つ
+- [0003](./decisions/0003-gemini-with-single-page-pdf.md): LLM は Vertex AI の gemini-3.8-flash にし、表のページだけを 1ページの PDF で渡す
+- [0004](./decisions/0004-compare-cells.md): 出力と正解は、見出しの組でセルを対応させ、値・単位・注記を分けて比べる
