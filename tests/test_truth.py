@@ -1,4 +1,4 @@
-"""truth のテスト。表 1-1 の正解が xlsx と PDF に合っているかを確かめる。"""
+"""truth のテスト。正解が xlsx と PDF に合っているかを確かめる。"""
 
 import json
 from pathlib import Path
@@ -7,16 +7,19 @@ import pytest
 from pypdf import PdfReader
 
 from llm_pdf_table_extractor.truth import (
+    TABLES,
+    TRUTH_DIR,
     Cell,
-    build_table_1_1,
+    build_table,
     format_number,
     read_cells,
     write_cells,
 )
 
-XLSX_1_1 = Path("data/xlsx/2026/n260100100.xlsx")
 TRUTH_1_1 = Path("data/truth/1-1.csv")
 META_1_1 = Path("data/truth/1-1.meta.json")
+TRUTH_1_2 = Path("data/truth/1-2.csv")
+META_1_2 = Path("data/truth/1-2.meta.json")
 PDF = Path("data/raw/26nihon.pdf")
 NO_PDF = "PDF は mise run fetch で落とす（git の対象外）"
 
@@ -48,8 +51,11 @@ def test_write_then_read_cells_keeps_notes(tmp_path: Path) -> None:
     assert read_cells(path) == cells
 
 
-def test_build_table_1_1_matches_committed_truth() -> None:
-    assert build_table_1_1(XLSX_1_1) == read_cells(TRUTH_1_1)
+@pytest.mark.parametrize("table_id", sorted(TABLES))
+def test_build_table_matches_committed_truth(table_id: str) -> None:
+    truth = read_cells(TRUTH_DIR / f"{table_id}.csv")
+
+    assert build_table(TABLES[table_id]) == truth
 
 
 def test_truth_1_1_has_all_prefectures_without_stray_rows() -> None:
@@ -100,3 +106,51 @@ def test_truth_1_1_units_appear_on_pdf_page() -> None:
 
     assert units == {"km2", "0/00"}
     assert all(f"({u})" in text for u in units)
+
+
+def test_truth_1_2_has_all_rows_without_stray_rows() -> None:
+    cells = read_cells(TRUTH_1_2)
+    labels = list(dict.fromkeys(c.row_label for c in cells))
+
+    assert len(cells) == 98
+    assert len(labels) == 49
+    assert labels[0] == "全国"
+    assert labels[-1] == "本州、四国、九州"
+    # xlsx の 32行目の「三重, 540, -」は PDF にないので入れない
+    assert "三重" not in labels
+    assert {c.unit for c in cells} == {""}
+
+
+def test_truth_1_2_column_note_is_on_every_cell_of_the_column() -> None:
+    meta = json.loads(META_1_2.read_text(encoding="utf-8"))
+    cells = read_cells(TRUTH_1_2)
+
+    # 注記の印「1)」は列の見出し「島の数」に付いている（decisions/0005）
+    assert {c.notes for c in cells if c.column_label == "島の数"} == {("1",)}
+    assert {c.notes for c in cells if c.column_label != "島の数"} == {()}
+    assert set(meta["notes"]) == {"1"}
+
+
+def _as_printed(value: str) -> str:
+    """正解の値を、PDF に書かれる形（整数は 3桁ごとのカンマ）にする。"""
+    return value if value == "-" else f"{int(value):,}"
+
+
+@pytest.mark.skipif(not PDF.exists(), reason=NO_PDF)
+def test_truth_1_2_rows_appear_on_pdf_page() -> None:
+    meta = json.loads(META_1_2.read_text(encoding="utf-8"))
+    page_number: int = meta["pdf_page"]
+    text = " ".join(
+        PdfReader(PDF).pages[page_number - 1].extract_text().split()
+    )
+    rows: dict[str, list[str]] = {}
+    for c in read_cells(TRUTH_1_2):
+        rows.setdefault(c.row_label, []).append(_as_printed(c.value))
+
+    # PDF では「北海道 1,473 -」のように、行の見出しのあとに値が並ぶ
+    missing = [
+        f"{label} {' '.join(values)}"
+        for label, values in rows.items()
+        if f"{label} {' '.join(values)}" not in text
+    ]
+    assert missing == []
