@@ -59,5 +59,11 @@ def test_fetch_skips_when_file_already_matches(tmp_path: Path) -> None:
 def test_load_sources_reads_repository_list() -> None:
     sources = load_sources(Path("data/sources.toml"))
 
-    assert [s.committed for s in sources] == [False, True]
+    # 本全体の PDF だけを落として使い、表ごとの xlsx はリポジトリに入れる
+    # （decisions/0001）
+    assert [s.path for s in sources if not s.committed] == [
+        Path("data/raw/26nihon.pdf")
+    ]
+    assert all(s.path.suffix == ".xlsx" for s in sources if s.committed)
+    assert len(sources) == 11
     assert all(len(s.sha256) == 64 for s in sources)
