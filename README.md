@@ -37,11 +37,14 @@ PDF の表から取り出したデータの精度を測るための正解。ど�
 
 - `data/truth/<表の番号>.csv`: `table_id`・`row_label`・`column_label`・`value`・`unit`・`notes`
 - `data/truth/<表の番号>.meta.json`: 表題・PDF のページ・基準日・注記の中身・資料
-- `mise run truth` で xlsx から作り直す。正解の値・単位が PDF のページに書かれているかは、テストで確かめる（PDF がある手元だけ）
+- `mise run truth` で xlsx から作り直す。表ごとの xlsx での置き場所（組の列・データの行・見出しの行）は `truth.py` の `TABLES` に書く。列の見出し・単位・列の注記は見出しの行から読む
+- 正解の値・見出しが PDF のページに書かれているかは、テストで確かめる（PDF がある手元だけ）
+- 列の見出しに付いた注記は、その列のセルすべてに付ける（[decisions/0005](./decisions/0005-column-notes.md)）
 
-| 表 | 内容 | PDF のページ |
-|---|---|---|
-| 1-1 | 都道府県別面積（令和7年） | 30 |
+| 表 | 内容 | PDF のページ | セル |
+|---|---|---|---|
+| 1-1 | 都道府県別面積（令和7年） | 30 | 96 |
+| 1-2 | 都道府県別島の数 | 30 | 98 |
 
 ## LLM で取り出して比べる
 
@@ -66,3 +69,4 @@ LLM の出力（`data/output/`）もリポジトリに入れる。notes の数�
 - [0002](./decisions/0002-truth-as-long-cells.md): 正解は、どの表でも同じ縦長の形（1行 = 1セル）で持つ
 - [0003](./decisions/0003-gemini-with-single-page-pdf.md): LLM は Vertex AI の gemini-3.8-flash にし、表のページだけを 1ページの PDF で渡す
 - [0004](./decisions/0004-compare-cells.md): 出力と正解は、見出しの組でセルを対応させ、値・単位・注記を分けて比べる
+- [0005](./decisions/0005-column-notes.md): 列の見出しに付いた注記は、その列のセルすべての notes に付ける
