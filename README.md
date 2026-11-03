@@ -31,6 +31,19 @@ mise run fix     # ruff の自動修正と format
   - 一覧（URL と sha256）: `data/sources.toml`
 - このリポジトリで作る構造化データ（整然データ）は、上の元データを加工して作成したもの
 
+## 正解データ
+
+PDF の表から取り出したデータの精度を測るための正解。どの表でも同じ縦長の形（1行 = 1セル）で持つ（[decisions/0002](./decisions/0002-truth-as-long-cells.md)）。
+
+- `data/truth/<表の番号>.csv`: `table_id`・`row_label`・`column_label`・`value`・`unit`・`notes`
+- `data/truth/<表の番号>.meta.json`: 表題・PDF のページ・基準日・注記の中身・資料
+- `mise run truth` で xlsx から作り直す。正解の値が PDF のページに書かれているかは、テストで確かめる（PDF がある手元だけ）
+
+| 表 | 内容 | PDF のページ |
+|---|---|---|
+| 1-1 | 都道府県別面積（令和7年） | 30 |
+
 ## 技術選定理由
 
 - [0001](./decisions/0001-source-data-placement.md): 表ごとの xlsx はリポジトリに入れ、本全体の PDF は落として使う
+- [0002](./decisions/0002-truth-as-long-cells.md): 正解は、どの表でも同じ縦長の形（1行 = 1セル）で持つ
