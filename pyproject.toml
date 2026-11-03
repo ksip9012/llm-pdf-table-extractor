@@ -4,14 +4,18 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "openpyxl>=3.1.5",
+]
 
 [dependency-groups]
 dev = [
   "pre-commit",
+  "pypdf>=6.21.4",
   "pyright",
   "pytest",
   "ruff",
+  "types-openpyxl>=3.1.5.20261017",
 ]
 
 [build-system]

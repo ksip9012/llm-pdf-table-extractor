@@ -23,6 +23,10 @@ run = [
 description = "元データ（data/sources.toml）を落として sha256 を確かめる"
 run = "uv run python -m llm_pdf_table_extractor.sources"
 
+[tasks.truth]
+description = "xlsx から正解（data/truth/）を作り直す"
+run = "uv run python -m llm_pdf_table_extractor.truth"
+
 [tasks.fix]
 description = "lint の自動修正と format"
 run = [
